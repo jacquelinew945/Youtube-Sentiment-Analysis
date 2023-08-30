@@ -33,24 +33,30 @@ def get_videos_from_channel(channel_id, max_results=10):
 
 def get_comments(video_id, max_results=100):
     comments = []
-    request = youtube.commentThreads().list(
-        part="snippet",
-        videoId=video_id,
-        maxResults=max_results,
-        order="relevance",
-        textFormat="plainText"
-    )
-    response = request.execute()
 
-    for item in response['items']:
-        comment = item['snippet']['topLevelComment']['snippet']
-        comment_id = item['snippet']['topLevelComment']['id']  # Corrected path to get comment_id
-        comments.append({
-            'video_id': video_id,
-            'comment_id': comment_id,
-            'text': comment['textDisplay'],
-            'like_count': comment['likeCount'],
-            'published_at': comment['publishedAt'],
-            'author': comment['authorDisplayName'],
-        })
+    try:
+        request = youtube.commentThreads().list(
+            part="snippet",
+            videoId=video_id,
+            maxResults=max_results,
+            order="relevance",
+            textFormat="plainText"
+        )
+        response = request.execute()
+
+        for item in response['items']:
+            comment = item['snippet']['topLevelComment']['snippet']
+            comment_id = item['snippet']['topLevelComment']['id']  # Corrected path to get comment_id
+            comments.append({
+                'video_id': video_id,
+                'comment_id': comment_id,
+                'text': comment['textDisplay'],
+                'like_count': comment['likeCount'],
+                'published_at': comment['publishedAt'],
+                'author': comment['authorDisplayName'],
+            })
+
+    except Exception as e:
+        print(f"Error fetching comments for video {video_id}. Reason: {e}")
+
     return comments
