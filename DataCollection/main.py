@@ -38,12 +38,12 @@ def save_comments(comments, filename):
         json.dump(comments, f)
 
 
-data_folder_path = os.path.join(os.getcwd(), 'DataCollection/data')
+data_folder_path = os.path.join(os.getcwd(), 'data')
 timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 filename = f'comments_data_{timestamp}.json'
 filepath = os.path.join(data_folder_path, filename)
 save_comments(all_comments, filepath)
 
-blob_name = os.path.basename(filepath)
+blob_name = filename
 
 upload_to_blob(account_url, container_name, blob_name, sas_token, filepath)

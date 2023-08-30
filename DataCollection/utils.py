@@ -19,7 +19,7 @@ def get_channel_id(username):
     return channel_id
 
 
-def get_videos_from_channel(channel_id, max_results=10):
+def get_videos_from_channel(channel_id, max_results=3):
     request = youtube.search().list(
         part="snippet",
         channelId=channel_id,
