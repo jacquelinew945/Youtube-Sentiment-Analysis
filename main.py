@@ -1,0 +1,29 @@
+import utils
+
+from googleapiclient.discovery import build
+from config import API_KEY
+
+youtube = build('youtube', 'v3', developerKey=API_KEY)
+
+CHANNEL_IDS = [
+    utils.get_channel_id('CNN'),                    # CNN
+    utils.get_channel_id('BBCNews'),                # BBC
+    utils.get_channel_id('aljazeeraenglish'),       # Al Jazeera English
+    utils.get_channel_id('FoxNews'),                # Fox News
+    utils.get_channel_id('guardiannews'),           # The Guardian
+    utils.get_channel_id('indiatoday'),             # India Today
+    'UCqnbDFdCpuN8CMEg0VuEBqA',                     # New York Times
+    'UC4SUWizzKc1tptprBkWjX2Q',                     # South China Morning Post
+    utils.get_channel_id('Channel4News'),           # Channel 4 News
+    utils.get_channel_id('abcnewsaustralia')        # ABC News Australia
+]
+
+all_videos = []
+# for each channel id, get 10 of the latest videos by id and title
+for channel_id in CHANNEL_IDS:
+    all_videos.extend(utils.get_videos_from_channel(channel_id))
+
+all_comments = []
+# for each video extracted, get 100 comments
+for video in all_videos:
+    all_comments.extend(utils.get_comments(video['video_id']))
