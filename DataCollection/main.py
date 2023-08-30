@@ -38,7 +38,7 @@ def save_comments(comments, filename):
         json.dump(comments, f)
 
 
-data_folder_path = os.path.join(os.getcwd(), 'Data Collection/data')
+data_folder_path = os.path.join(os.getcwd(), 'DataCollection/data')
 timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 filename = f'comments_data_{timestamp}.json'
 filepath = os.path.join(data_folder_path, filename)
