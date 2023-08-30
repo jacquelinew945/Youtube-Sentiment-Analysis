@@ -1,13 +1,21 @@
-import utils
 import json
 import datetime
 import os
+import utils
 
+from dotenv import load_dotenv, find_dotenv
 from googleapiclient.discovery import build
-from config import API_KEY, account_url, container_name, sas_token
 from blob_upload import upload_to_blob
 
-youtube = build('youtube', 'v3', developerKey=API_KEY)
+load_dotenv(find_dotenv())
+
+# get environment variables
+api_key = os.environ.get("API_KEY")
+account_url = os.environ.get("ACCOUNT_URL")
+container_name = os.environ.get("CONTAINER_NAME")
+sas_token = os.environ.get("SAS_TOKEN")
+
+youtube = build('youtube', 'v3', developerKey=api_key)
 
 CHANNEL_IDS = [
     utils.get_channel_id('CNN'),  # CNN

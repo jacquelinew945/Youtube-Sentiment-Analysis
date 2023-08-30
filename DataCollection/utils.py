@@ -1,7 +1,13 @@
-from googleapiclient.discovery import build
-from config import API_KEY
+import os
 
-youtube = build('youtube', 'v3', developerKey=API_KEY)
+from dotenv import load_dotenv, find_dotenv
+from googleapiclient.discovery import build
+
+load_dotenv(find_dotenv())
+
+api_key = os.environ.get("API_KEY")
+
+youtube = build('youtube', 'v3', developerKey=api_key)
 
 
 # sample usage: get_channel_id('CNN')
@@ -47,13 +53,15 @@ def get_comments(video_id, max_results=100):
         for item in response['items']:
             comment = item['snippet']['topLevelComment']['snippet']
             comment_id = item['snippet']['topLevelComment']['id']  # Corrected path to get comment_id
+            video_title = item['snippet']['videoTitle']
             comments.append({
+                'video_title': video_title,
                 'video_id': video_id,
                 'comment_id': comment_id,
                 'text': comment['textDisplay'],
                 'like_count': comment['likeCount'],
                 'published_at': comment['publishedAt'],
-                'author': comment['authorDisplayName'],
+                'author': comment['authorDisplayName']
             })
 
     except Exception as e:
