@@ -4,7 +4,7 @@ import datetime
 import os
 
 from googleapiclient.discovery import build
-from config import API_KEY
+from config import API_KEY, account_url, container_name, sas_token
 from blob_upload import upload_to_blob
 
 youtube = build('youtube', 'v3', developerKey=API_KEY)
@@ -44,11 +44,6 @@ filename = f'comments_data_{timestamp}.json'
 filepath = os.path.join(data_folder_path, filename)
 save_comments(all_comments, filepath)
 
-
-# Use the function
-account_url = "https://jacquelinew945.blob.core.windows.net/youtube-news-comments"
-container_name = "youtube-news-comments"
 blob_name = os.path.basename(filepath)
-sas_token = "YOUR_SAS_TOKEN"
 
 upload_to_blob(account_url, container_name, blob_name, sas_token, filepath)
