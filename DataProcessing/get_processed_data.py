@@ -15,7 +15,7 @@ container_name = os.environ.get("CONTAINER_NAME")
 blobs = blob_service_client.get_container_client(container_name).list_blobs()
 
 # filter for the processed files
-processed_blobs = [blob.name for blob in blobs if "_processed.json" in blob.name]
+processed_blobs = [blob.name for blob in blobs if "_processed.csv" in blob.name]
 
 # extract the datetime from the filenames and sort
 sorted_blobs = sorted(
