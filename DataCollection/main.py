@@ -36,9 +36,12 @@ for channel_id in CHANNEL_IDS:
     all_videos.extend(utils.get_videos_from_channel(channel_id))
 
 all_comments = []
-# for each video extracted, get 100 comments
+# for each video extracted, get 100 comments and append the video title
 for video in all_videos:
-    all_comments.extend(utils.get_comments(video['video_id']))
+    comments_for_video = utils.get_comments(video['video_id'])
+    for comment in comments_for_video:
+        comment['video_title'] = video['title']  # append the video title to the comment data
+    all_comments.extend(comments_for_video)
 
 
 def save_comments(comments, filename):
