@@ -30,12 +30,14 @@ if sorted_files:
     latest_file = os.path.join('data', sorted_files[0])
 
 df = pd.read_csv(latest_file, delimiter='|')
-df_titles = df[['video_id', 'video_title']]
+# dataframe with only channel name, video id and title for merging purposes
+df_titles = df[['channel_name', 'video_id', 'video_title']]
 
 # track how many nans in a video before dropping rows with nan values
 nan_rows = df[df['text'].isna()]
 nan_counts = nan_rows.groupby('video_id').size()
 df = df.dropna(subset=['text'])
+# remove unwanted symbols from title column
 df['video_title'] = df['video_title'].str.replace(r'[^\w\s]', '', regex=True)
 
 
@@ -92,6 +94,7 @@ df_clusters = pd.DataFrame({
     'cluster': clusters
 })
 
+# tidy up cluster dataframe
 df_clusters = df_clusters.merge(df_titles, on='video_id', how='left')
 df_clusters = df_clusters.drop_duplicates(subset=['video_id', 'video_title'])
 df_clusters = df_clusters.sort_values(by='cluster')
@@ -107,6 +110,7 @@ def top_words(cluster_id, n_words=20):
     return most_common
 
 
+# add top words for each cluster to cluster dataframe
 for cluster_id in df_clusters['cluster'].unique():
     print(f"Cluster {cluster_id} top words: {top_words(cluster_id)}")
     df_clusters['top_words'] = df_clusters['cluster'].map(top_words)
@@ -115,25 +119,30 @@ df = df.sort_values(by='cluster')
 
 
 # by video_id
-def top_words_and_title_in_video(video_id, n_words=8):
+def top_words_and_title_and_channel_in_video(video_id, n_words=8):
     video_comments = df[df['video_id'] == video_id]['lemmatized_words']
     all_words = [word for comment_list in video_comments for word in comment_list]
     most_common = Counter(all_words).most_common(n_words)
     title = df[df['video_id'] == video_id]['video_title'].iloc[0]  # Getting the title of the video
-    return title, most_common
+    channel = df[df['video_id'] == video_id]['channel_name'].iloc[0]  # Getting the channel name of the video
+    return title, most_common, channel
 
 
+# add top words by video id
 video_ids = df['video_id'].unique()
-video_titles_and_top_words = [top_words_and_title_in_video(video_id) for video_id in video_ids]
+video_data = [top_words_and_title_and_channel_in_video(video_id) for video_id in video_ids]
 
-# extract titles and top words separately from the combined list
-video_titles = [item[0] for item in video_titles_and_top_words]
-video_top_words = [item[1] for item in video_titles_and_top_words]
+# extract titles, top words, and channel names separately from the combined list
+video_titles = [item[0] for item in video_data]
+video_top_words = [item[1] for item in video_data]
+video_channels = [item[2] for item in video_data]
 
+# new dataframe
 df_video = pd.DataFrame({
     'video_id': video_ids,
     'video_title': video_titles,
-    'top_words': video_top_words
+    'top_words': video_top_words,
+    'channel_name': video_channels
 })
 
 # save to csv
