@@ -52,10 +52,8 @@ def get_comments(video_id, max_results=100):
 
         for item in response['items']:
             comment = item['snippet']['topLevelComment']['snippet']
-            comment_id = item['snippet']['topLevelComment']['id']  # Corrected path to get comment_id
-            video_title = item['snippet']['videoTitle']
+            comment_id = item['snippet']['topLevelComment']['id']
             comments.append({
-                'video_title': video_title,
                 'video_id': video_id,
                 'comment_id': comment_id,
                 'text': comment['textDisplay'],
