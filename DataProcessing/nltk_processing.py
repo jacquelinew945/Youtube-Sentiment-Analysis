@@ -1,12 +1,15 @@
 import pandas as pd
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 from nltk.stem import WordNetLemmatizer
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from gensim.models import Word2Vec
 from dotenv import load_dotenv, find_dotenv
 from sklearn.cluster import KMeans
 from collections import Counter
+from wordcloud import WordCloud
 from blob_upload import upload_to_blob
 
 load_dotenv(find_dotenv())
@@ -83,8 +86,8 @@ agg_vec = df.groupby('video_id')['text_vector'].apply(lambda x: np.mean(np.array
 X = np.array(agg_vec.tolist())
 
 # k-means clustering
-n_clusters = 10
-kmeans = KMeans(n_clusters=n_clusters, n_init=20)
+n_clusters = 8
+kmeans = KMeans(n_clusters=n_clusters, n_init=10)
 clusters = kmeans.fit_predict(X)
 
 # check cluster sizes
@@ -145,6 +148,62 @@ df_video = pd.DataFrame({
     'channel_name': video_channels
 })
 
-# save to csv
-# filename = latest_file.split("/")
-# filename_train = filename[0] + ("/ML_" + filename[1])
+
+# initialize sentiment analyzer
+sia = SentimentIntensityAnalyzer()
+
+# apply sentiment scores
+df['lemmatized_words'] = df['lemmatized_words'].apply(lambda x: ' '.join(x))
+df['sentiment_scores'] = df['lemmatized_words'].apply(lambda x: sia.polarity_scores(x)['compound'])
+df['sentiment'] = df['sentiment_scores'].apply(lambda x: 'positive' if x > 0 else ('neutral' if x == 0 else 'negative'))
+
+# percentage of comments which are positive in all videos
+videos = []
+for i in range(0, df.video_id.nunique()):
+    positive = df[(df.video_id == df.video_id.unique()[i]) & (df.sentiment == 'positive')].count()[0]
+    total = df[df.video_id == df.video_id.unique()[i]]['sentiment'].value_counts().sum()
+    percentage = (positive/total) * 100
+    videos.append(round(percentage, 2))
+
+df_positivity = pd.DataFrame(videos, df.video_id.unique()).reset_index()
+df_positivity.columns = ['video_id', 'positive_percentage']
+df_positivity = df_positivity.merge(df_titles, on='video_id', how='inner')
+df_positivity['comment_count'] = df_positivity.groupby('video_id')['video_id'].transform('size')
+df_positivity = df_positivity.drop_duplicates()
+
+# sort df by likes in descending order
+# add the top 3 liked comments from each video as a new column
+df_sorted = df.sort_values(by=['video_id', 'like_count'], ascending=[True, False])
+top_3_comments = df_sorted.groupby('video_id').head(3).copy()
+top_3_comments['top_liked'] = top_3_comments.apply(lambda row: (row['like_count'], row['text']), axis=1)
+grouped_comments = top_3_comments.groupby('video_id')['top_liked'].apply(list).reset_index()
+df_positivity = df_positivity.merge(grouped_comments, on='video_id', how='left')
+
+# construct a wordcloud for all words
+all_words = ' '.join([text for text in df['lemmatized_words']])
+wordcloud = WordCloud(width=800, height=500, random_state=21, max_font_size=110).generate(all_words)
+
+plt.figure(figsize=(10, 7))
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis('off')
+plt.show()
+
+# construct a wordcloud for positive words
+all_words_pos = ' '.join([text for text in df['lemmatized_words'][df.sentiment == 'positive']])
+
+wordcloud_pos = WordCloud(width=800, height=500, random_state=21, max_font_size=110).generate(all_words_pos)
+
+plt.figure(figsize=(10, 7))
+plt.imshow(wordcloud_pos, interpolation="bilinear")
+plt.axis('off')
+plt.show()
+
+# construct a wordcloud for negative words
+all_words_neg = ' '.join([text for text in df['lemmatized_words'][df.sentiment == 'negative']])
+
+wordcloud_neg = WordCloud(width=800, height=500, random_state=21, max_font_size=110).generate(all_words_neg)
+
+plt.figure(figsize=(10, 7))
+plt.imshow(wordcloud_neg, interpolation="bilinear")
+plt.axis('off')
+plt.show()
